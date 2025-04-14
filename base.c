@@ -76,13 +76,28 @@ void print_stack()
     printf("================================\n\n");
 }
 
-void push()
+void push(int num, const char* info)
 {
-
+    if (SP < 50)
+    {
+        SP += 1;
+        stack_info[SP] = strncpy(stack_info[SP], info, sizeof(stack_info[SP]) - 1);
+        call_stack[SP] = num;
+    }
+    else
+        printf("stack is full\n");
 }
 void pop()
 {
-
+    if (SP > -1)
+    {
+        call_stack[SP] = 0;
+        strcpy(stack_info[SP], "");
+        SP -= 1;
+    }
+    else
+        printf("stack is empty\n");
+}
 }
 void function_prologue()
 {
