@@ -37,9 +37,9 @@ char    stack_info[STACK_SIZE][20];     // Call Stack 요소에 대한 설명을
 int SP = -1; 
 int FP = -1;
 
-void push();
+void push(int num, const char* info);
 void pop();
-void function_prologue();
+void function_prologue(const char* func_name);
 void function_epilogue();
 void func1(int arg1, int arg2, int arg3);
 void func2(int arg1, int arg2);
@@ -78,15 +78,17 @@ void print_stack()
 
 void push(int num, const char* info)
 {
-    if (SP < 50)
+    if (SP < STACK_SIZE - 1)
     {
         SP += 1;
-        stack_info[SP] = strncpy(stack_info[SP], info, sizeof(stack_info[SP]) - 1);
         call_stack[SP] = num;
+        strncpy(stack_info[SP], info, sizeof(stack_info[SP]) - 1);
+        stack_info[SP][sizeof(stack_info[SP]) - 1] = '\0';
     }
     else
         printf("stack is full\n");
 }
+
 void pop()
 {
     if (SP > -1)
@@ -95,59 +97,75 @@ void pop()
         strcpy(stack_info[SP], "");
         SP -= 1;
     }
-    else
-        printf("stack is empty\n");
 }
-}
-void function_prologue()
-{
 
+void function_prologue(const char* func_name)
+{
+    push(-1, "Return Address");
+    push(FP, func_name);
+    FP = SP;
 }
+
 void function_epilogue()
 {
-
+    while (SP > FP + 1) pop();
+    pop();
+    FP = call_stack[FP];
+    pop();
 }
 
 //func 내부는 자유롭게 추가해도 괜찮으나, 아래의 구조를 바꾸지는 마세요
 void func1(int arg1, int arg2, int arg3)
 {
     int var_1 = 100;
-
     // func1의 스택 프레임 형성 (함수 프롤로그 + push)
+    push(arg3, "arg3");
+    push(arg2, "arg2");
+    push(arg1, "arg1");
+    function_prologue("func1 SFP");
+    push(var_1, "var_1");
     print_stack();
     func2(11, 13);
     // func2의 스택 프레임 제거 (함수 에필로그 + pop)
+    function_epilogue();
     print_stack();
 }
-
 
 void func2(int arg1, int arg2)
 {
     int var_2 = 200;
-
+    push(arg2, "arg2");
+    push(arg1, "arg1");
     // func2의 스택 프레임 형성 (함수 프롤로그 + push)
+    function_prologue("func2 SFP");
+    push(var_2, "var_2");
     print_stack();
     func3(77);
     // func3의 스택 프레임 제거 (함수 에필로그 + pop)
+    function_epilogue();
     print_stack();
 }
-
 
 void func3(int arg1)
 {
     int var_3 = 300;
     int var_4 = 400;
+    push(arg1, "arg1");
+    function_prologue("func3 SFP");
+    push(var_3, "var_3");
+    push(var_4, "var_4");
 
     // func3의 스택 프레임 형성 (함수 프롤로그 + push)
     print_stack();
+    function_epilogue();
 }
-
 
 //main 함수에 관련된 stack frame은 구현하지 않아도 됩니다.
 int main()
 {
     func1(1, 2, 3);
     // func1의 스택 프레임 제거 (함수 에필로그 + pop)
+    function_epilogue();
     print_stack();
     return 0;
 }
